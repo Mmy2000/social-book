@@ -21,10 +21,10 @@ class Like(models.Model):
     REACTION_CHOICES = (
         ("like", "👍"),
         ("love", "❤️"),
-        ("haha", "😄"),
+        ("haha", "😂"),
         ("wow", "😮"),
         ("sad", "😢"),
-        ("angry", "😠"),
+        ("angry", "😡"),
     )
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -59,10 +59,10 @@ class CommentLike(models.Model):
     REACTION_CHOICES = (
         ("like", "👍"),
         ("love", "❤️"),
-        ("haha", "😄"),
+        ("haha", "😂"),
         ("wow", "😮"),
         ("sad", "😢"),
-        ("angry", "😠"),
+        ("angry", "😡"),
     )
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
