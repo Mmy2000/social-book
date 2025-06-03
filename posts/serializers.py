@@ -141,6 +141,7 @@ class PostSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField()
     comments = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
+    share_count = serializers.SerializerMethodField()
     # shared_from = serializers.SerializerMethodField()  # Updated here
 
     class Meta:
@@ -157,6 +158,7 @@ class PostSerializer(serializers.ModelSerializer):
             "feeling",
             "attachments",
             "shared_from",
+            "share_count",
             "time_since_created",
             "time_since_updated",
         )
@@ -197,6 +199,9 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_like_count(self, obj):
         return obj.likes.count()
+
+    def get_share_count(self, obj):
+        return obj.shared_posts.count()
 
     # def get_shared_from(self, obj):
     #     if obj.shared_from:
