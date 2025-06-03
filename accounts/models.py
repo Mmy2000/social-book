@@ -55,7 +55,13 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=100, unique=True)
 
-    friends = models.ManyToManyField("self")
+    friends = models.ManyToManyField("self", blank=True)
+    saved_posts = models.ManyToManyField(
+        "posts.Post", related_name="saved_by", blank=True
+    )
+    favorites = models.ManyToManyField(
+        "posts.Post", related_name="favorited_by", blank=True
+    )
     friends_count = models.IntegerField(default=0)
 
     # required

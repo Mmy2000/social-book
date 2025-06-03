@@ -143,7 +143,8 @@ class PostSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     share_count = serializers.SerializerMethodField()
     shared_users = serializers.SerializerMethodField()
-    # shared_from = serializers.SerializerMethodField()  # Updated here
+    is_saved = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
@@ -163,6 +164,8 @@ class PostSerializer(serializers.ModelSerializer):
             "shared_users",
             "time_since_created",
             "time_since_updated",
+            "is_saved",
+            "is_favorited",
         )
 
     def get_comments(self, obj):
@@ -230,10 +233,11 @@ class PostSerializer(serializers.ModelSerializer):
             )
         return data
 
-    # def get_shared_from(self, obj):
-    #     if obj.shared_from:
-    #         return PostSerializer(obj.shared_from, context=self.context).data
-    #     return None
+    def get_is_saved(self, obj):
+        return obj.saved_by.filter(id=self.context["request"].user.id).exists()
+
+    def get_is_favorited(self, obj):
+        return obj.favorited_by.filter(id=self.context["request"].user.id).exists()
 
 
 class PostCreateAttachmentSerializer(serializers.ModelSerializer):
@@ -332,3 +336,4 @@ class SharePostSerializer(serializers.ModelSerializer):
             role=validated_data.get("role", "public"),
             shared_from=shared_from,
         )
+

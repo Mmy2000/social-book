@@ -349,3 +349,81 @@ class SharePostView(APIView):
         return CustomResponse(
             data=serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )
+
+
+class SavePostView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            post = Post.objects.get(pk=pk)
+            user = request.user
+
+            if post in user.saved_posts.all():
+                user.saved_posts.remove(post)
+                message = "Post removed from saved posts"
+            else:
+                user.saved_posts.add(post)
+                message = "Post saved successfully"
+
+            serializer = PostSerializer(post, context={"request": request})
+            return CustomResponse(
+                data=serializer.data, status=status.HTTP_200_OK, message=message
+            )
+        except Post.DoesNotExist:
+            return CustomResponse(
+                status=status.HTTP_404_NOT_FOUND, message="Post not found"
+            )
+
+
+class UnsavePostView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        post = Post.objects.get(pk=pk)
+        request.user.saved_posts.remove(post)
+        return CustomResponse(data=post.data, status=status.HTTP_200_OK)
+
+
+class SavedPostsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        saved_posts = request.user.saved_posts.all()
+        serializer = PostSerializer(
+            saved_posts, many=True, context={"request": request}
+        )
+        return CustomResponse(data=serializer.data, status=status.HTTP_200_OK)
+
+
+class AddToFavoritesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            post = Post.objects.get(pk=pk)
+            user = request.user
+
+            if post in user.favorites.all():
+                user.favorites.remove(post)
+                message = "Post removed from favorites"
+            else:
+                user.favorites.add(post)
+                message = "Post added to favorites"
+
+            serializer = PostSerializer(post, context={"request": request})
+            return CustomResponse(
+                data=serializer.data, status=status.HTTP_200_OK, message=message
+            )
+        except Post.DoesNotExist:
+            return CustomResponse(
+                status=status.HTTP_404_NOT_FOUND, message="Post not found"
+            )
+
+class FavoritesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        favorites = request.user.favorites.all()
+        serializer = PostSerializer(favorites, many=True, context={"request": request})
+        return CustomResponse(data=serializer.data, status=status.HTTP_200_OK)

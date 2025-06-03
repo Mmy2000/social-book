@@ -1,5 +1,21 @@
 from django.urls import path
-from .views import PostView,PostDetailView, PostCreateAPIView, PostUpdateAPIView, PostLikeAPIView, AddCommentView, SharePostView, UpdateCommentView, DeleteCommentView, CommentLikeAPIView
+from .views import (
+    PostView,
+    PostDetailView,
+    PostCreateAPIView,
+    PostUpdateAPIView,
+    PostLikeAPIView,
+    AddCommentView,
+    SavePostView,
+    SavedPostsView,
+    SharePostView,
+    UpdateCommentView,
+    DeleteCommentView,
+    CommentLikeAPIView,
+    AddToFavoritesView,
+    FavoritesView,
+)
+
 urlpatterns = [
     path("", PostView.as_view(), name="post-list-create"),  # for GET (list)
     path(
@@ -33,4 +49,10 @@ urlpatterns = [
         name="like-comment",
     ),  # for liking a specific comment
     path("share/", SharePostView.as_view(), name="share-post"),
+    path("<int:pk>/save/", SavePostView.as_view(), name="toggle-save-post"),
+    path("saved/", SavedPostsView.as_view(), name="saved-posts"),
+    path(
+        "<int:pk>/favorite/", AddToFavoritesView.as_view(), name="toggle-favorite-post"
+    ),
+    path("favorites/", FavoritesView.as_view(), name="favorite-posts"),
 ]
