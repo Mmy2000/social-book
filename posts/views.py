@@ -36,8 +36,10 @@ class PostDetailView(APIView):
             if request.user.is_authenticated:
                 for user in request.user.friends.all():
                     user_ids.append(user.id)
-            posts = Post.objects.filter(created_by_id__in=list(user_ids))
-            post = posts.get(pk=pk)
+                posts = Post.objects.filter(created_by_id__in=list(user_ids))
+                post = posts.get(pk=pk)
+            else:
+                post = Post.objects.get(pk=pk)
             serializer = PostSerializer(post, context={"request": request})
             return CustomResponse(
                 data=serializer.data,
