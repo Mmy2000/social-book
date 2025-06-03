@@ -142,6 +142,7 @@ class PostSerializer(serializers.ModelSerializer):
     comments = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
     share_count = serializers.SerializerMethodField()
+    shared_users = serializers.SerializerMethodField()
     # shared_from = serializers.SerializerMethodField()  # Updated here
 
     class Meta:
@@ -159,6 +160,7 @@ class PostSerializer(serializers.ModelSerializer):
             "attachments",
             "shared_from",
             "share_count",
+            "shared_users",
             "time_since_created",
             "time_since_updated",
         )
@@ -202,6 +204,31 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_share_count(self, obj):
         return obj.shared_posts.count()
+
+    def get_shared_users(self, obj):
+        shared_users = obj.shared_posts.select_related(
+            "created_by", "created_by__userprofile"
+        )
+        request = self.context.get("request")
+        data = []
+        for user in shared_users:
+            user = user.created_by
+            if hasattr(user, "userprofile") and user.userprofile.profile_picture:
+                profile_picture_url = request.build_absolute_uri(
+                    user.userprofile.get_profile_picture
+                )
+            else:
+                profile_picture_url = request.build_absolute_uri(
+                    "/static/default_images/default_profile_picture.jpg"
+                )
+            data.append(
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "image": profile_picture_url,
+                }
+            )
+        return data
 
     # def get_shared_from(self, obj):
     #     if obj.shared_from:
