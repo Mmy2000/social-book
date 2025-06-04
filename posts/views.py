@@ -14,11 +14,15 @@ from notifications.models import Notification
 
 class PostView(APIView):
     def get(self, request):
+        group_id = request.query_params.get("group_id")
         user_ids = [request.user.id]
         if request.user.is_authenticated:
             for user in request.user.friends.all():
                 user_ids.append(user.id)
-            posts = Post.objects.filter(created_by_id__in=list(user_ids))
+            if group_id:
+                posts = Post.objects.filter(created_by_id__in=list(user_ids), group=group_id)
+            else:
+                posts = Post.objects.filter(created_by_id__in=list(user_ids)).exclude(group__isnull=False)
         else:
             posts = []
         serializer = PostSerializer(posts, many=True, context={"request": request})

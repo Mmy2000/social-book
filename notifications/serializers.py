@@ -68,4 +68,6 @@ class NotificationSerializer(serializers.ModelSerializer):
             return f"{sender_name} accepted your group invitation"
         elif obj.notification_type == "group_invitation_declined":
             return f"{sender_name} declined your group invitation"
+        elif obj.notification_type == "group_member_removed":
+            return f"{sender_name} removed you from {obj.group.name}"
         return ""

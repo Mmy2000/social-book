@@ -251,17 +251,19 @@ class PostCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ["id", "content", "feeling", "role", "attachments"]
+        fields = ["id", "content", "feeling", "role", "attachments", "group"]
 
     def create(self, validated_data):
         request = self.context.get("request")
         files = request.FILES.getlist("attachments")  # <- get uploaded files
+        print("validated_data", validated_data)
 
         post = Post.objects.create(
             content=validated_data.get("content"),
             role=validated_data.get("role"),
             feeling=validated_data.get("feeling"),
             created_by=request.user,  # directly use request.user
+            group=validated_data.get("group"),
         )
 
         for file in files:

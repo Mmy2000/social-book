@@ -20,4 +20,5 @@ urlpatterns = [
         views.GroupInvitationResponseView.as_view(),
         name="invitation-response",
     ),
+    path("<int:pk>/remove-member/<int:user_id>/", views.RemoveMemberView.as_view(), name="remove-member"),
 ]

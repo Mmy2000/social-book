@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework import status, permissions, parsers
 from rest_framework.views import APIView
 from django.db.models import Q
-from .models import Group, GroupMember, GroupInvitation
+from .models import Group, GroupMember, GroupInvitation, User
 from .serializers import (
     GroupSerializer,
     GroupMemberSerializer,
@@ -193,6 +193,12 @@ class GroupMembershipView(APIView):
                     message="You are already a member of this group",
                 )
 
+            if group.is_private:
+                return CustomResponse(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    message="This group is private and requires an invitation to join",
+                )
+
             # Create membership
             GroupMember.objects.create(user=user, group=group, role="member")
 
@@ -245,7 +251,7 @@ class GroupMembersView(APIView):
         try:
             group = Group.objects.get(pk=pk)
             members = GroupMember.objects.filter(group=group)
-            serializer = GroupMemberSerializer(members, many=True)
+            serializer = GroupMemberSerializer(members, many=True, context={"request": request})
             return CustomResponse(
                 data=serializer.data,
                 status=status.HTTP_200_OK,
@@ -332,6 +338,7 @@ class GroupInvitationResponseView(APIView):
                     user=request.user, group=invitation.group, role="member"
                 )
                 invitation.status = "accepted"
+                invitation.delete()
 
                 # Create notification for invitation sender
                 Notification.objects.create(
@@ -344,6 +351,7 @@ class GroupInvitationResponseView(APIView):
                 message = "Invitation accepted successfully"
             else:
                 invitation.status = "declined"
+                invitation.delete()
 
                 # Create notification for invitation sender
                 Notification.objects.create(
@@ -385,3 +393,40 @@ class UserInvitationsView(APIView):
             status=status.HTTP_200_OK,
             message="Invitations retrieved successfully",
         )
+
+class RemoveMemberView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, pk, user_id):
+        try:
+            group = Group.objects.get(pk=pk)
+            sender = request.user
+            user = User.objects.get(pk=user_id)
+
+            if not GroupMember.objects.filter(group=group, user=sender, role="admin").exists():
+                return CustomResponse(
+                    status=status.HTTP_403_FORBIDDEN,
+                    message="Only group admins can remove members",
+                )
+
+            member = GroupMember.objects.get(group=group, user=user_id)
+            member.delete()
+
+            # Create notification for the removed user
+            Notification.objects.create(
+                recipient=user,
+                sender=sender,
+                notification_type="group_member_removed",
+                group=group,
+            )
+
+            return CustomResponse(
+                status=status.HTTP_200_OK,
+                message="Member removed successfully",
+            )
+        except GroupMember.DoesNotExist:
+            return CustomResponse(
+                status=status.HTTP_404_NOT_FOUND,
+                message="Member not found in this group",
+            )
+

@@ -18,7 +18,7 @@ class Notification(models.Model):
         ("group_invitation", "Group Invitation"),
         ("group_invitation_accepted", "Group Invitation Accepted"),
         ("group_invitation_declined", "Group Invitation Declined"),
-
+        ("group_member_removed", "Group Member Removed"),
     )
 
     recipient = models.ForeignKey(

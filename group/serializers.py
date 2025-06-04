@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Group, GroupMember, GroupInvitation
 from django.contrib.auth import get_user_model
 from posts.serializers import SampleUserData
+from django.db import transaction, IntegrityError
 
 
 class GroupMemberSerializer(serializers.ModelSerializer):
@@ -136,12 +137,30 @@ class GroupInvitationCreateSerializer(serializers.Serializer):
         group = self.context.get("group")
         invited_by = self.context.get("invited_by")
         user_ids = validated_data.get("user_ids")
+        User = get_user_model()
 
         invitations = []
+
+        users = User.objects.filter(id__in=user_ids)
+        user_dict = {user.id: user for user in users}  # Avoid querying in loop
+
         for user_id in user_ids:
+            user = user_dict.get(user_id)
+            if not user:
+                continue  # This should not happen if validated properly
+
             invitation = GroupInvitation.objects.create(
-                group=group, invited_by=invited_by, invited_user_id=user_id
+                group=group,
+                invited_by=invited_by,
+                invited_user=user,  # Pass the actual User instance here
             )
             invitations.append(invitation)
 
+        if not invitations:
+            raise serializers.ValidationError(
+                "No new invitations could be created - users already invited"
+            )
+
         return invitations
+
+

@@ -3,18 +3,8 @@ from django.db import models
 from django.utils.timesince import timesince
 from accounts.models import User
 import uuid
-from django.core.exceptions import ValidationError
-
-
-# Create your models here.
-
-
-def validate_svg_or_image(value):
-    ext = os.path.splitext(value.name)[1].lower()
-    allowed_extensions = [".jpg", ".jpeg", ".png", ".gif", ".svg"]
-
-    if ext not in allowed_extensions:
-        raise ValidationError("Only JPG, PNG, GIF, and SVG files are allowed.")
+from core.models import validate_svg_or_image
+from group.models import Group
 
 
 class Like(models.Model):
@@ -156,6 +146,7 @@ class Post(models.Model):
         on_delete=models.SET_NULL,
         related_name="shared_posts",
     )
+    group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True, related_name="posts")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

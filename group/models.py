@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from posts.models import validate_svg_or_image
-
+from core.models import validate_svg_or_image
 User = get_user_model()
 
 
@@ -66,7 +65,6 @@ class GroupInvitation(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ["group", "invited_user"]
         ordering = ["-created_at"]
 
     def __str__(self):
