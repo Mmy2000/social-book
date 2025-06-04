@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from posts.models import validate_svg_or_image
 
 User = get_user_model()
 
@@ -16,7 +17,7 @@ class Group(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_private = models.BooleanField(default=False)
-    cover_image = models.ImageField(upload_to="group_covers/", blank=True, null=True)
+    cover_image = models.ImageField(upload_to="group_covers/", blank=True, null=True, validators=[validate_svg_or_image])
 
     def __str__(self):
         return self.name
