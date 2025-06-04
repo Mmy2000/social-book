@@ -90,25 +90,58 @@ class GroupInvitationSerializer(serializers.ModelSerializer):
         read_only_fields = ["status"]
 
 
-class GroupInvitationCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GroupInvitation
-        fields = ["invited_user"]
+class GroupInvitationCreateSerializer(serializers.Serializer):
+    user_ids = serializers.ListField(
+        child=serializers.IntegerField(), min_length=1, write_only=True
+    )
 
-    def validate(self, data):
+    def validate_user_ids(self, value):
         group = self.context.get("group")
-        invited_user = data.get("invited_user")
+        User = get_user_model()
 
-        # Check if user is already a member
-        if GroupMember.objects.filter(group=group, user=invited_user).exists():
-            raise serializers.ValidationError("User is already a member of this group")
+        # Check if all users exist
+        existing_users = User.objects.filter(id__in=value)
+        if len(existing_users) != len(value):
+            raise serializers.ValidationError("One or more users do not exist")
 
-        # Check if there's already a pending invitation
-        if GroupInvitation.objects.filter(
-            group=group, invited_user=invited_user, status="pending"
-        ).exists():
+        # Check if any users are already members
+        existing_members = GroupMember.objects.filter(
+            group=group, user_id__in=value
+        ).values_list("user_id", flat=True)
+
+        if existing_members:
+            member_usernames = User.objects.filter(id__in=existing_members).values_list(
+                "username", flat=True
+            )
             raise serializers.ValidationError(
-                "An invitation is already pending for this user"
+                f"Users {', '.join(member_usernames)} are already members of this group"
             )
 
-        return data
+        # Check for existing pending invitations
+        pending_invites = GroupInvitation.objects.filter(
+            group=group, invited_user_id__in=value, status="pending"
+        ).values_list("invited_user_id", flat=True)
+
+        if pending_invites:
+            pending_usernames = User.objects.filter(id__in=pending_invites).values_list(
+                "username", flat=True
+            )
+            raise serializers.ValidationError(
+                f"Users {', '.join(pending_usernames)} already have pending invitations"
+            )
+
+        return value
+
+    def create(self, validated_data):
+        group = self.context.get("group")
+        invited_by = self.context.get("invited_by")
+        user_ids = validated_data.get("user_ids")
+
+        invitations = []
+        for user_id in user_ids:
+            invitation = GroupInvitation.objects.create(
+                group=group, invited_by=invited_by, invited_user_id=user_id
+            )
+            invitations.append(invitation)
+
+        return invitations

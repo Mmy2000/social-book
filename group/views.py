@@ -274,33 +274,34 @@ class GroupInviteView(APIView):
                 )
 
             serializer = GroupInvitationCreateSerializer(
-                data=request.data, context={"group": group}
+                data=request.data, context={"group": group, "invited_by": request.user}
             )
 
             if serializer.is_valid():
-                invitation = serializer.save(group=group, invited_by=request.user)
+                invitations = serializer.save()
 
-                # Create notification for invited user
-                Notification.objects.create(
-                    recipient=invitation.invited_user,
-                    sender=request.user,
-                    notification_type="group_invitation",
-                    group=group,
-                )
+                # Create notifications for all invited users
+                for invitation in invitations:
+                    Notification.objects.create(
+                        recipient=invitation.invited_user,
+                        sender=request.user,
+                        notification_type="group_invitation",
+                        group=group,
+                    )
 
                 response_serializer = GroupInvitationSerializer(
-                    invitation, context={"request": request}
+                    invitations, many=True, context={"request": request}
                 )
                 return CustomResponse(
                     data=response_serializer.data,
                     status=status.HTTP_201_CREATED,
-                    message="Invitation sent successfully",
+                    message=f"Successfully sent {len(invitations)} invitation(s)",
                 )
 
             return CustomResponse(
                 data=serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
-                message="Failed to send invitation",
+                message="Failed to send invitations",
             )
 
         except Group.DoesNotExist:
