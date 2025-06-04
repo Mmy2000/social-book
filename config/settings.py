@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "chat",
     "notifications",
     "core",
+    "group",  # Add the new group app
 ]
 
 AUTH_USER_MODEL = "accounts.User"  # Custom User model

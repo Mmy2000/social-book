@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from group.models import Group
 from posts.models import Post, Comment, Like, CommentLike
 from django.utils.timesince import timesince
 
@@ -14,6 +15,10 @@ class Notification(models.Model):
         ("friend_request_accepted", "Friend Request Accepted"),
         ("friend_request_rejected", "Friend Request Rejected"),
         ("friend_request_cancelled", "Friend Request Cancelled"),
+        ("group_invitation", "Group Invitation"),
+        ("group_invitation_accepted", "Group Invitation Accepted"),
+        ("group_invitation_declined", "Group Invitation Declined"),
+
     )
 
     recipient = models.ForeignKey(
@@ -31,6 +36,7 @@ class Notification(models.Model):
     comment = models.ForeignKey(
         Comment, on_delete=models.CASCADE, null=True, blank=True
     )
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True)
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

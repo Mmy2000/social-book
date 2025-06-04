@@ -62,4 +62,10 @@ class NotificationSerializer(serializers.ModelSerializer):
             return f"{sender_name} rejected your friend request"
         elif obj.notification_type == "friend_request_cancelled":
             return f"{sender_name} cancelled their friend request"
+        elif obj.notification_type == "group_invitation":
+            return f"{sender_name} invited you to join {obj.group.name}"
+        elif obj.notification_type == "group_invitation_accepted":
+            return f"{sender_name} accepted your group invitation"
+        elif obj.notification_type == "group_invitation_declined":
+            return f"{sender_name} declined your group invitation"
         return ""
