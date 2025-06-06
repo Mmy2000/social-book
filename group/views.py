@@ -2,6 +2,8 @@ from django.shortcuts import render
 from rest_framework import status, permissions, parsers
 from rest_framework.views import APIView
 from django.db.models import Q
+
+from core.pagination import CustomPagination
 from .models import Group, GroupMember, GroupInvitation, User
 from .serializers import (
     GroupSerializer,
@@ -19,6 +21,7 @@ from notifications.models import Notification
 class GroupListCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
+    pagination_class = CustomPagination
 
     def get(self, request):
         filter_type = request.query_params.get("filter", "all")
@@ -42,12 +45,14 @@ class GroupListCreateView(APIView):
         else:
             # Get all groups
             groups = Group.objects.all()
-
-        serializer = GroupSerializer(groups, many=True, context={"request": request})
+        paginator = self.pagination_class()
+        paginated_groups = paginator.paginate_queryset(groups, request)
+        serializer = GroupSerializer(paginated_groups, many=True, context={"request": request})
         return CustomResponse(
             data=serializer.data,
             status=status.HTTP_200_OK,
             message="Groups retrieved successfully",
+            pagination=paginator.get_pagination_meta(),
         )
 
     def post(self, request):
@@ -246,16 +251,20 @@ class GroupMembershipView(APIView):
 
 class GroupMembersView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get(self, request, pk):
         try:
             group = Group.objects.get(pk=pk)
             members = GroupMember.objects.filter(group=group)
-            serializer = GroupMemberSerializer(members, many=True, context={"request": request})
+            paginator = self.pagination_class()
+            paginated_members = paginator.paginate_queryset(members, request)
+            serializer = GroupMemberSerializer(paginated_members, many=True, context={"request": request})
             return CustomResponse(
                 data=serializer.data,
                 status=status.HTTP_200_OK,
                 message="Group members retrieved successfully",
+                pagination=paginator.get_pagination_meta(),
             )
         except Group.DoesNotExist:
             return CustomResponse(

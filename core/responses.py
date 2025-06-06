@@ -3,7 +3,7 @@ from rest_framework.response import Response
 
 class CustomResponse(Response):
     def __init__(self, data=None, status=None, message=None, template_name=None, headers=None, exception=False,
-                 content_type=None):
+                 content_type=None, pagination=None):
         non_field_keys = ['non_field_errors', 'detail', 'details']
 
         if status and status < 400:
@@ -60,5 +60,6 @@ class CustomResponse(Response):
             'status_code': int(status),
             'data': data,
             'message': message,
+            'pagination': pagination,
         }
         super().__init__(custom_data, status, template_name, headers, exception, content_type)

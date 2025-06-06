@@ -6,13 +6,14 @@ from rest_framework.decorators import action
 from .models import Notification
 from .serializers import NotificationSerializer
 from core.responses import CustomResponse
-
+from core.pagination import CustomPagination
 # Create your views here.
 
 
 class NotificationListView(generics.ListAPIView):
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         return Notification.objects.filter(recipient=self.request.user)
@@ -20,12 +21,16 @@ class NotificationListView(generics.ListAPIView):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         unread_count = queryset.filter(is_read=False).count()
-        serializer = self.get_serializer(queryset, many=True)
+        paginator = self.pagination_class()
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = self.get_serializer(paginated_queryset, many=True)
         return CustomResponse(
             data={"notifications": serializer.data, "unread_count": unread_count},
             status=status.HTTP_200_OK,
             message="Notifications retrieved successfully",
+            pagination=paginator.get_pagination_meta(),
         )
+
 
 
 class MarkNotificationAsReadView(APIView):

@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from accounts.models import FriendshipRequest, UserProfile
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from core.pagination import CustomPagination
 from notifications.models import Notification
 from posts.models import Post, PostAttachment
 from posts.serializers import PostAttachmentSerializer, PostSerializer
@@ -598,37 +599,46 @@ class UnfriendView(APIView):
 
 class FriendsListView(APIView):
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get(self, request):
         user = request.user
         friends = user.friends.all()
-        serializer = FriendSerializer(friends, many=True, context={"request": request})
+        paginator = self.pagination_class()
+        paginated_friends = paginator.paginate_queryset(friends, request)
+        serializer = FriendSerializer(paginated_friends, many=True, context={"request": request})
         return CustomResponse(
             data=serializer.data,
             message="Friend retrieved successfully.",
             status=status.HTTP_200_OK,
+            pagination=paginator.get_pagination_meta(),
         )
 
 
 class FriendRequestsView(APIView):
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get(self, request):
         user = request.user
         requests = FriendshipRequest.objects.filter(created_for=user, status="sent")
+        paginator = self.pagination_class()
+        paginated_requests = paginator.paginate_queryset(requests, request)
         serializer = FriendshipRequestSerializerSample(
-            requests, many=True, context={"request": request}
+            paginated_requests, many=True, context={"request": request}
         )
 
         return CustomResponse(
             data=serializer.data,
             message="Friend Requests retrieved successfully.",
             status=status.HTTP_200_OK,
+            pagination=paginator.get_pagination_meta(),
         )
 
 
 class FriendshipSuggestionsAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get(self, request):
         current_user = request.user
@@ -674,8 +684,10 @@ class FriendshipSuggestionsAPIView(APIView):
             suggestions = suggestions.order_by("?")[:10]
 
         # Serialize the data
+        paginator = self.pagination_class()
+        paginated_suggestions = paginator.paginate_queryset(suggestions, request)
         serializer = FriendSuggestionsSerializer(
-            suggestions, many=True, context={"request": request}
+            paginated_suggestions, many=True, context={"request": request}
         )
         return CustomResponse(
             data={
@@ -683,11 +695,13 @@ class FriendshipSuggestionsAPIView(APIView):
                 "count": len(serializer.data),
             },
             status=status.HTTP_200_OK,
+            pagination=paginator.get_pagination_meta(),
         )
 
 
 class UserSearchView(APIView):
     permission_classes = [AllowAny]  # You can use AllowAny if you want it public
+    pagination_class = CustomPagination
 
     def get(self, request):
         query = request.query_params.get("q", "")
@@ -699,9 +713,11 @@ class UserSearchView(APIView):
         ).exclude(
             id=request.user.id
         )  # exclude self if logged in
-
-        serializer = FriendSerializer(users, many=True, context={"request": request})
+        paginator = self.pagination_class()
+        paginated_users = paginator.paginate_queryset(users, request)
+        serializer = FriendSerializer(paginated_users, many=True, context={"request": request})
         return CustomResponse(
             data=serializer.data,
             status=status.HTTP_200_OK,
+            pagination=paginator.get_pagination_meta(),
         )

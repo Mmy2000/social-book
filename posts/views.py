@@ -1,6 +1,7 @@
 from rest_framework import status, generics, permissions
-from posts.models import Comment, CommentLike, Like, Post
+from posts.models import Comment, CommentLike, Like, Post, PostAttachment
 from .serializers import (
+    PostAttachmentSerializer,
     PostSerializer,
     CommentSerializer,
     PostLikeSerializer,
@@ -10,9 +11,12 @@ from .serializers import (
 from rest_framework.views import APIView
 from core.responses import CustomResponse
 from notifications.models import Notification
+from core.pagination import CustomPagination
 
 
 class PostView(APIView):
+    pagination_class = CustomPagination
+    
     def get(self, request):
         group_id = request.query_params.get("group_id")
         user_ids = [request.user.id]
@@ -25,9 +29,12 @@ class PostView(APIView):
                 posts = Post.objects.filter(created_by_id__in=list(user_ids)).exclude(group__isnull=False)
         else:
             posts = []
-        serializer = PostSerializer(posts, many=True, context={"request": request})
+        paginator = self.pagination_class()
+        paginated_posts = paginator.paginate_queryset(posts, request)
+        serializer = PostSerializer(paginated_posts, many=True, context={"request": request})
         return CustomResponse(
             data=serializer.data,
+            pagination=paginator.get_pagination_meta(),
             status=status.HTTP_200_OK,
             message="Posts retrieved successfully",
         )
@@ -382,16 +389,6 @@ class SavePostView(APIView):
                 status=status.HTTP_404_NOT_FOUND, message="Post not found"
             )
 
-
-class UnsavePostView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request, pk):
-        post = Post.objects.get(pk=pk)
-        request.user.saved_posts.remove(post)
-        return CustomResponse(data=post.data, status=status.HTTP_200_OK)
-
-
 class SavedPostsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -434,3 +431,20 @@ class FavoritesView(APIView):
         favorites = request.user.favorites.all()
         serializer = PostSerializer(favorites, many=True, context={"request": request})
         return CustomResponse(data=serializer.data, status=status.HTTP_200_OK)
+
+class PhotoView(APIView):
+    pagination_class = CustomPagination
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        photos = PostAttachment.objects.filter(created_by=request.user)
+        paginator = self.pagination_class()
+        paginated_photos = paginator.paginate_queryset(photos, request)
+        serializer = PostAttachmentSerializer(paginated_photos, many=True, context={"request": request})
+        return CustomResponse(
+            data=serializer.data,
+            pagination=paginator.get_pagination_meta(),
+            status=status.HTTP_200_OK,
+            message="Photos retrieved successfully",
+        )
+    

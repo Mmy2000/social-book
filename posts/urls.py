@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    PhotoView,
     PostView,
     PostDetailView,
     PostCreateAPIView,
@@ -55,4 +56,5 @@ urlpatterns = [
         "<int:pk>/favorite/", AddToFavoritesView.as_view(), name="toggle-favorite-post"
     ),
     path("favorites/", FavoritesView.as_view(), name="favorite-posts"),
+    path("photos/", PhotoView.as_view(), name="photos"),
 ]
