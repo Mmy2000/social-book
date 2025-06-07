@@ -5,17 +5,21 @@ from chat.serializers import ConversationDetailSerializer, ConversationListSeria
 from core.responses import CustomResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from core.pagination import CustomPagination
 
 # Create your views here.
 
 
 class ConversationListView(APIView):
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get(self, request):
         conversations = request.user.conversations.all()
-        serializer = ConversationListSerializer(conversations, many=True,context={'request': request})
-        return CustomResponse(data=serializer.data, status=200)
+        paginator = self.pagination_class()
+        paginated_conversations = paginator.paginate_queryset(conversations, request)
+        serializer = ConversationListSerializer(paginated_conversations, many=True,context={'request': request})
+        return CustomResponse(data=serializer.data, pagination=paginator.get_pagination_meta(), status=200)
 
 class ConversationDetailView(APIView):
     permission_classes = [IsAuthenticated]
