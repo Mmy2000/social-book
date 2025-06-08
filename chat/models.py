@@ -30,6 +30,7 @@ class ConversationMessage(models.Model):
         User, related_name="received_messages", on_delete=models.SET_NULL
         , null=True, blank=True
     )
+    is_read = models.BooleanField(default=False)
     created_by = models.ForeignKey(
         User,
         related_name="sent_messages",

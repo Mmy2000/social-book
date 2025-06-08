@@ -34,13 +34,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
             name = data["data"]["name"]
             body = data["data"]["body"]
 
+            # Broadcast the message to the room group
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {"type": "chat_message", "body": body, "name": name},
             )
 
+            # Save the message to DB
             await self.save_message(conversation_id, body, sent_to_id)
 
+            # Notify the receiver
             await self.channel_layer.group_send(
                 f"user_{sent_to_id}",
                 {
@@ -54,6 +57,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
             name = data["data"]["name"]
             await self.channel_layer.group_send(
                 self.room_group_name, {"type": "user_typing", "name": name}
+            )
+
+        elif event_type == "mark_read":
+            conversation_id = data["data"]["conversation_id"]
+            await self.mark_messages_as_read(conversation_id)
+
+            # Optionally notify the sender that the message was read
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {"type": "messages_marked_read", "user_id": self.scope["user"].id},
             )
 
     async def chat_message(self, event):
@@ -79,6 +92,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
         )
 
+    async def messages_marked_read(self, event):
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "event": "messages_marked_read",
+                    "user_id": event["user_id"],
+                }
+            )
+        )
+
     @sync_to_async
     def save_message(self, conversation_id, body, sent_to_id):
         user = self.scope["user"]
@@ -88,3 +111,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             sent_to_id=sent_to_id,
             created_by=user,
         )
+
+    @sync_to_async
+    def mark_messages_as_read(self, conversation_id):
+        ConversationMessage.objects.filter(
+            conversation_id=conversation_id, sent_to=self.scope["user"], is_read=False
+        ).update(is_read=True)

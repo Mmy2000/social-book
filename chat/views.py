@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from accounts.models import User
-from chat.models import Conversation
+from chat.models import Conversation, ConversationMessage
 from chat.serializers import ConversationDetailSerializer, ConversationListSerializer, ConversationMessageSerializer
 from core.responses import CustomResponse
 from rest_framework.permissions import IsAuthenticated
