@@ -9,7 +9,7 @@ It provides RESTful APIs and real-time WebSocket functionality for features like
 ## 🔗 Frontend Repository
 
 👉 [https://github.com/Mmy2000/social-network-react](https://github.com/Mmy2000/social-network-react)  
-👉 [Live Frontend](https://social-network-frontend-mmy2000.vercel.app)
+👉 [Live Frontend](https://social-network-react-black.vercel.app/)
 
 ### 🔐 Test Login
 
