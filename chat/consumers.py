@@ -48,7 +48,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 f"user_{sent_to_id}",
                 {
                     "type": "new_message_notification",
-                    "message": f"New message from {name}",
+                    "message": f"New message from {name}: {body}",
                     "from_user": name,
                 },
             )
