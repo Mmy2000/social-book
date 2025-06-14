@@ -10,6 +10,7 @@ urlpatterns = [
     path("notifications/", include("notifications.urls")),
     path("chat/", include("chat.urls")),
     path("groups/", include("group.urls")),
+    path("events/", include("events.urls")),
 ]
 
 if settings.DEBUG:

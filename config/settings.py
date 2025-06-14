@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "notifications",
     "core",
     "group",  # Add the new group app
+    "events",
 ]
 
 AUTH_USER_MODEL = "accounts.User"  # Custom User model
