@@ -251,7 +251,7 @@ class PostCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ["id", "content", "feeling", "role", "attachments", "group"]
+        fields = ["id", "content", "feeling", "role", "attachments", "group", "event"]
 
     def create(self, validated_data):
         request = self.context.get("request")
@@ -264,6 +264,7 @@ class PostCreateSerializer(serializers.ModelSerializer):
             feeling=validated_data.get("feeling"),
             created_by=request.user,  # directly use request.user
             group=validated_data.get("group"),
+            event=validated_data.get("event"),
         )
 
         for file in files:

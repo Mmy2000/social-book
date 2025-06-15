@@ -5,7 +5,7 @@ from accounts.models import User
 import uuid
 from core.models import validate_svg_or_image
 from group.models import Group
-
+from events.models import Event
 
 class Like(models.Model):
     REACTION_CHOICES = (
@@ -147,6 +147,7 @@ class Post(models.Model):
         related_name="shared_posts",
     )
     group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True, related_name="posts")
+    event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True, related_name="posts")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
