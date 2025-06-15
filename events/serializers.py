@@ -12,6 +12,7 @@ class EventSerializer(serializers.ModelSerializer):
     interested_users = SampleUserData(many=True, read_only=True)
     is_joined = serializers.SerializerMethodField()
     is_interested = serializers.SerializerMethodField()
+    is_creator = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -27,4 +28,10 @@ class EventSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return request.user in obj.interested_users.all()
+        return False
+    
+    def get_is_creator(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return request.user == obj.creator
         return False
