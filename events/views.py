@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from core.responses import CustomResponse
 from rest_framework import status, permissions
 
+from notifications.models import Notification
 from posts.serializers import SampleUserData
 from .models import Event
 from .serializers import EventSerializer
@@ -85,9 +86,21 @@ class JoinEventAPIView(APIView):
         event = get_object_or_404(Event, pk=pk)
         if request.user in event.attendees.all():
             event.attendees.remove(request.user)
+            Notification.objects.create(
+                recipient=event.creator,
+                sender=request.user,
+                notification_type="event_not_joined",
+                event=event,
+            )
             return CustomResponse(message="You have left the event.", status=status.HTTP_200_OK)
         else:
             event.attendees.add(request.user)
+            Notification.objects.create(
+                recipient=event.creator,
+                sender=request.user,
+                notification_type="event_joined",
+                event=event,
+            )
             return CustomResponse(
                 message="You have joined the event.", status=status.HTTP_200_OK
         )
@@ -99,11 +112,23 @@ class InterestedEventAPIView(APIView):
         event = get_object_or_404(Event, pk=pk)
         if request.user in event.interested_users.all():
             event.interested_users.remove(request.user)
+            Notification.objects.create(
+                recipient=event.creator,
+                sender=request.user,
+                notification_type="event_not_interested",
+                event=event,
+            )
             return CustomResponse(
                 message="You are not interested in the event.", status=status.HTTP_200_OK
             )
         else:
             event.interested_users.add(request.user)
+            Notification.objects.create(
+                recipient=event.creator,
+                sender=request.user,
+                notification_type="event_interested",
+                event=event,
+            )
         return CustomResponse(
             message="You are interested in the event.", status=status.HTTP_200_OK
         )

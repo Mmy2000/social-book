@@ -3,6 +3,7 @@ from django.conf import settings
 from group.models import Group
 from posts.models import Post, Comment, Like, CommentLike
 from django.utils.timesince import timesince
+from events.models import Event
 
 
 class Notification(models.Model):
@@ -19,6 +20,10 @@ class Notification(models.Model):
         ("group_invitation_accepted", "Group Invitation Accepted"),
         ("group_invitation_declined", "Group Invitation Declined"),
         ("group_member_removed", "Group Member Removed"),
+        ("event_joined", "Event Joined"),
+        ("event_not_joined", "Event Not Joined"),
+        ("event_interested", "Event Interested"),
+        ("event_not_interested", "Event Not Interested"),
     )
 
     recipient = models.ForeignKey(
@@ -37,6 +42,7 @@ class Notification(models.Model):
         Comment, on_delete=models.CASCADE, null=True, blank=True
     )
     group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True)
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

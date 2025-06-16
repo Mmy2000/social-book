@@ -21,6 +21,8 @@ class NotificationSerializer(serializers.ModelSerializer):
             "is_read",
             "created_at",
             "notification_message",
+            "event",
+            "group",
         ]
         read_only_fields = [
             "id",
@@ -30,6 +32,8 @@ class NotificationSerializer(serializers.ModelSerializer):
             "comment",
             "created_at",
             "notification_message",
+            "event",
+            "group",
         ]
 
     def get_notification_message(self, obj):
@@ -70,4 +74,12 @@ class NotificationSerializer(serializers.ModelSerializer):
             return f"{sender_name} declined your group invitation"
         elif obj.notification_type == "group_member_removed":
             return f"{sender_name} removed you from {obj.group.name}"
+        elif obj.notification_type == "event_joined":
+            return f"{sender_name} joined {obj.event.title}"
+        elif obj.notification_type == "event_not_joined":
+            return f"{sender_name} left {obj.event.title}"
+        elif obj.notification_type == "event_interested":
+            return f"{sender_name} is interested in {obj.event.title}"
+        elif obj.notification_type == "event_not_interested":
+            return f"{sender_name} is not interested in {obj.event.title}"
         return ""
