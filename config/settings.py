@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "core",
     "group",  # Add the new group app
     "events",
+    "memories",
 ]
 
 AUTH_USER_MODEL = "accounts.User"  # Custom User model

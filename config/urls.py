@@ -11,6 +11,7 @@ urlpatterns = [
     path("chat/", include("chat.urls")),
     path("groups/", include("group.urls")),
     path("events/", include("events.urls")),
+    path("memories/", include("memories.urls")),
 ]
 
 if settings.DEBUG:
